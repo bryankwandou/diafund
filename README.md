@@ -24,12 +24,7 @@ time, only after an independent verifier signs proof that it reached its purpose
 | **Concept & idea owner** | Christian Alexander Wongso |
 | **PIC (Superteam Campus Club, Universitas Atma Jaya Makassar)** | Vincentius Bryan Kwandou — facilitated turning the idea into a working product |
 
-**Demo administrator account**
 
-```
-username: nayrbryanGaming
-password: @Nataliamaria12345
-```
 
 Signs in with full operator access: register hubs, open pads, anchor proofs, and
 trigger on-chain releases.
