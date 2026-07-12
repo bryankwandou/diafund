@@ -1,26 +1,154 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* Diafund brand tokens. Dark, calm, and built to read like a serious money product.
+   The teal-to-blue accent stands in for light passing through glass: the "see
+   through" idea made visual. */
+@theme {
+  --color-ink: #080b11;
+  --color-ink-2: #0c111a;
+  --color-surface: #10161f;
+  --color-surface-2: #151d28;
+  --color-line: #1d2735;
+  --color-line-2: #273244;
+  --color-fg: #e8eef5;
+  --color-muted: #93a1b3;
+  --color-faint: #63718a;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-brand: #35e5c4;
+  --color-brand-2: #4c8dff;
+  --color-proven: #35e5c4;
+  --color-pending: #f5b84f;
+  --color-released: #7cf29b;
+  --color-danger: #ff6b6b;
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  --radius: 14px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  --background: var(--color-ink);
+  --foreground: var(--color-fg);
+}
+
+* {
+  border-color: var(--color-line);
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-ink);
+  color: var(--color-fg);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
+
+/* Ambient page glow behind the hero. */
+.aurora {
+  position: absolute;
+  inset: -20% -10% auto -10%;
+  height: 720px;
+  pointer-events: none;
+  background:
+    radial-gradient(50% 55% at 20% 20%, rgba(53, 229, 196, 0.16), transparent 70%),
+    radial-gradient(45% 55% at 80% 10%, rgba(76, 141, 255, 0.16), transparent 70%);
+  filter: blur(20px);
+  z-index: 0;
+}
+
+.grid-lines {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(circle at 50% 0%, black, transparent 75%);
+}
+
+.brand-text {
+  background: linear-gradient(100deg, var(--color-brand), var(--color-brand-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.card {
+  background: linear-gradient(180deg, var(--color-surface), var(--color-ink-2));
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+}
+
+.hairline {
+  border: 1px solid var(--color-line);
+}
+
+.chip {
+  border: 1px solid var(--color-line);
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 999px;
+}
+
+.btn-brand {
+  background: linear-gradient(100deg, var(--color-brand), var(--color-brand-2));
+  color: #04120f;
+  font-weight: 600;
+  border-radius: 10px;
+  transition: filter 0.18s ease, transform 0.18s ease;
+}
+.btn-brand:hover {
+  filter: brightness(1.08);
+}
+.btn-brand:active {
+  transform: translateY(1px);
+}
+
+.mono {
+  font-family: var(--font-mono), ui-monospace, monospace;
+}
+
+.df-input,
+.df-select {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid var(--color-line);
+  background: var(--color-ink-2);
+  padding: 0.55rem 0.75rem;
+  font-size: 14px;
+  color: var(--color-fg);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+.df-input:focus,
+.df-select:focus {
+  border-color: rgba(53, 229, 196, 0.6);
+}
+.df-input::placeholder {
+  color: var(--color-faint);
+}
+
+/* Slow drift for the aurora so the hero feels alive without being noisy. */
+@keyframes drift {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, 18px, 0); }
+}
+.animate-drift { animation: drift 12s ease-in-out infinite; }
+
+@keyframes flow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+.flow-line {
+  background: linear-gradient(90deg, transparent, var(--color-brand), transparent);
+  background-size: 200% 100%;
+  animation: flow 2.4s linear infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+.pulse-dot { animation: pulse-dot 1.6s ease-in-out infinite; }
