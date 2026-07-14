@@ -67,7 +67,18 @@ export function DonatePanel({
       setStatus("done");
       router.refresh();
     } catch (e) {
-      setErr((e as Error).message || "The transaction did not go through.");
+      const raw = (e as Error).message || "";
+      // Wallets and public RPCs return terse errors; translate the common ones.
+      const friendly = raw.includes("dUSDC")
+        ? raw
+        : raw.toLowerCase().includes("user rejected")
+          ? "You dismissed the wallet prompt. Nothing was sent."
+          : raw.toLowerCase().includes("insufficient")
+            ? "Not enough balance in this wallet to cover the amount plus the network fee."
+            : raw.includes("Internal error") || raw.includes("429")
+              ? "The public devnet RPC is briefly rate limited. Wait a few seconds and try again."
+              : raw || "The transaction did not go through.";
+      setErr(friendly);
       setStatus("error");
     }
   }

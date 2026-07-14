@@ -39,6 +39,21 @@ export async function buildDonateTx(params: {
   } else {
     const mint = new PublicKey(DEVNET_USDC_MINT);
     const fromAta = await getAssociatedTokenAddress(mint, donor);
+    // A wallet that never held dUSDC has no token account yet; the transfer would
+    // fail in simulation with an opaque error. Catch it here with a clear message.
+    try {
+      const bal = await connection.getTokenAccountBalance(fromAta);
+      if ((bal.value.uiAmount || 0) < amount) {
+        throw new Error(
+          `You hold ${bal.value.uiAmount || 0} dUSDC but tried to send ${amount}. Use the free faucet below first.`
+        );
+      }
+    } catch (e) {
+      if (e instanceof Error && e.message.includes("faucet")) throw e;
+      throw new Error(
+        "This wallet has no dUSDC yet. Claim 100 free test dUSDC with the faucet button below, wait a few seconds, then donate."
+      );
+    }
     const toAta = await getAssociatedTokenAddress(mint, vault);
     const toInfo = await connection.getAccountInfo(toAta);
     if (!toInfo) {

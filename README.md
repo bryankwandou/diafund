@@ -25,9 +25,9 @@ time, only after an independent verifier signs proof that it reached its purpose
 | **PIC (Superteam Campus Club, Universitas Atma Jaya Makassar)** | Vincentius Bryan Kwandou — facilitated turning the idea into a working product |
 
 
-
-Signs in with full operator access: register hubs, open pads, anchor proofs, and
-trigger on-chain releases.
+A demo account with full operator access (register hubs, open pads, anchor proofs,
+trigger on-chain releases) is provided to judges privately through the submission
+form. Credentials are not published in this repository.
 
 ---
 
