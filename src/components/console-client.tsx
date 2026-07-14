@@ -1,9 +1,9 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MilestoneBadge, TxLink } from "./ui";
 import { amount } from "@/lib/utils";
-import { Plus, Trash2, Building2, PackagePlus, ListChecks } from "lucide-react";
+import { Plus, Trash2, Building2, PackagePlus, ListChecks, ShieldAlert } from "lucide-react";
 
 type Hub = { id: string; name: string };
 type MS = { id: string; title: string; amount: number; status: string; releaseSig?: string };
@@ -13,6 +13,7 @@ const TABS = [
   { k: "hub", label: "New hub", icon: Building2 },
   { k: "pad", label: "New pad", icon: PackagePlus },
   { k: "clear", label: "Milestones", icon: ListChecks },
+  { k: "review", label: "Review queue", icon: ShieldAlert },
 ] as const;
 
 export function ConsoleClient({
@@ -24,7 +25,7 @@ export function ConsoleClient({
   pads: Pad[];
   defaultSteward: string;
 }) {
-  const [tab, setTab] = useState<"hub" | "pad" | "clear">("clear");
+  const [tab, setTab] = useState<"hub" | "pad" | "clear" | "review">("clear");
 
   return (
     <div className="mt-8">
@@ -46,6 +47,7 @@ export function ConsoleClient({
         {tab === "hub" && <HubForm defaultSteward={defaultSteward} />}
         {tab === "pad" && <PadForm hubs={hubs} defaultBeneficiary="5JTDJdfDHqu3TEHuBTATJF49G8i8YKy42riJG9KWFfSk" />}
         {tab === "clear" && <ClearMilestones pads={pads} />}
+        {tab === "review" && <ReviewQueue />}
       </div>
     </div>
   );
@@ -103,6 +105,7 @@ function HubForm({ defaultSteward }: { defaultSteward: string }) {
 }
 
 function PadForm({ hubs, defaultBeneficiary }: { hubs: Hub[]; defaultBeneficiary: string }) {
+  const [startedAt] = useState(() => Date.now());
   const [f, setF] = useState({
     hubId: hubs[0]?.id || "",
     title: "",
@@ -123,6 +126,7 @@ function PadForm({ hubs, defaultBeneficiary }: { hubs: Hub[]; defaultBeneficiary
     await run("/api/pads", {
       ...f,
       goal: Number(f.goal),
+      formStartedAt: startedAt,
       milestones: ms.map((m) => ({
         title: m.title,
         detail: m.detail,
@@ -260,6 +264,95 @@ function MilestoneRow({ m, asset }: { m: MS; asset: "SOL" | "USDC" }) {
         </div>
       )}
       {msg && !ok && <p className="mt-2 text-xs text-danger">{msg}</p>}
+    </div>
+  );
+}
+
+type FlagRow = {
+  id: string;
+  pad_id: string;
+  title: string;
+  rule: string;
+  detail: string;
+  severity: number;
+  created_at: string;
+};
+
+function ReviewQueue() {
+  const [flags, setFlags] = useState<FlagRow[] | null>(null);
+  const [err, setErr] = useState("");
+  const { run, busy } = useSubmit();
+
+  async function load() {
+    try {
+      const res = await fetch("/api/flags");
+      const j = await res.json();
+      if (!res.ok) throw new Error(j.error || "could not load flags");
+      setFlags(j.flags);
+    } catch (e) {
+      setErr((e as Error).message);
+    }
+  }
+  useEffect(() => {
+    load();
+  }, []);
+
+  async function act(padId: string, action: "approve" | "block") {
+    const r = await run("/api/flags", { padId, action });
+    if (r?.ok) load();
+  }
+
+  if (err) return <p className="text-sm text-danger">{err}</p>;
+  if (!flags) return <p className="text-sm text-muted">Loading review queue…</p>;
+  if (flags.length === 0)
+    return (
+      <div className="card max-w-xl p-6 text-sm text-muted">
+        The review queue is empty. Pads that trip the anti-fraud screening
+        (scam language, high value, velocity, linked wallets) show up here with
+        their flags, ready to approve or block.
+      </div>
+    );
+
+  // group flags per pad
+  const byPad = new Map<string, FlagRow[]>();
+  for (const f of flags) {
+    const arr = byPad.get(f.pad_id) || [];
+    arr.push(f);
+    byPad.set(f.pad_id, arr);
+  }
+
+  return (
+    <div className="space-y-4">
+      {[...byPad.entries()].map(([padId, rows]) => (
+        <div key={padId} className="card p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <a href={`/pad/${padId}`} target="_blank" rel="noreferrer" className="text-sm font-semibold text-fg hover:text-brand">
+                {rows[0].title}
+              </a>
+              <p className="mono mt-0.5 text-[11px] text-faint">{padId}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button onClick={() => act(padId, "approve")} disabled={busy} className="btn-brand px-3.5 py-1.5 text-xs disabled:opacity-60">
+                Approve — go live
+              </button>
+              <button onClick={() => act(padId, "block")} disabled={busy} className="chip px-3.5 py-1.5 text-xs text-danger hover:border-danger/50 disabled:opacity-60">
+                Block
+              </button>
+            </div>
+          </div>
+          <div className="mt-3 space-y-1.5">
+            {rows.map((f) => (
+              <div key={f.id} className="flex items-start gap-2 text-xs">
+                <span className={`chip shrink-0 px-2 py-0.5 ${f.severity >= 3 ? "text-danger" : f.severity === 2 ? "text-brand" : "text-muted"}`}>
+                  {f.rule} · s{f.severity}
+                </span>
+                <span className="pt-0.5 text-muted">{f.detail}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
