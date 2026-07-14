@@ -10,6 +10,12 @@ export async function POST(req: NextRequest) {
     }
     const pad = await getPad(padId);
     if (!pad) return NextResponse.json({ error: "unknown pad" }, { status: 404 });
+    if (pad.reviewStatus !== "approved") {
+      return NextResponse.json(
+        { error: "this pad is under review — donations are paused" },
+        { status: 403 }
+      );
+    }
     const donation = await addDonation({
       padId,
       donor,

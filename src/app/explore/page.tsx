@@ -1,4 +1,4 @@
-import { listPads, listHubs } from "@/lib/db";
+import { explorePads, listHubs } from "@/lib/db";
 import { PadCard } from "@/components/pad-card";
 import { Reveal, Stagger, StaggerItem } from "@/components/motion";
 
@@ -6,7 +6,7 @@ export const metadata = { title: "Explore pads — Diafund" };
 export const dynamic = "force-dynamic";
 
 export default async function Explore() {
-  const [pads, hubs] = await Promise.all([listPads(), listHubs()]);
+  const [pads, hubs] = await Promise.all([explorePads(), listHubs()]);
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-12">

@@ -24,12 +24,23 @@ export default async function PadPage({ params }: { params: Promise<{ id: string
         ← Back to pads
       </Link>
 
+      {pad.reviewStatus === "flagged" && (
+        <div className="mt-4 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-300">
+          This pad was auto-flagged by Diafund&apos;s anti-fraud screening and is
+          under review. It is hidden from Explore and donations are paused until
+          a reviewer clears it.
+        </div>
+      )}
+
       <div className="mt-4 grid gap-8 lg:grid-cols-3">
         {/* Main */}
         <div className="lg:col-span-2">
           <div className="flex items-center gap-2">
             <span className="chip px-2.5 py-0.5 text-[11px] text-brand">{pad.category}</span>
             <PadStatusBadge status={pad.status} />
+            {pad.visibility === "unlisted" && (
+              <span className="chip px-2.5 py-0.5 text-[11px] text-faint">invite-only</span>
+            )}
           </div>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight">{pad.title}</h1>
           <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">{pad.summary}</p>
@@ -137,7 +148,13 @@ export default async function PadPage({ params }: { params: Promise<{ id: string
 
         {/* Sidebar */}
         <div className="space-y-4 lg:sticky lg:top-20 lg:self-start">
-          <DonatePanel padId={pad.id} vault={pad.vault} asset={pad.asset} />
+          {pad.reviewStatus === "flagged" ? (
+            <div className="card p-5 text-sm text-muted">
+              Donations are paused while this pad is under review.
+            </div>
+          ) : (
+            <DonatePanel padId={pad.id} vault={pad.vault} asset={pad.asset} />
+          )}
           <LedgerSummary padId={pad.id} />
         </div>
       </div>

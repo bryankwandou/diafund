@@ -24,6 +24,8 @@ export interface Pad {
   raised: number;
   beneficiary: string; // where released funds land
   status: PadStatus;
+  visibility: "public" | "unlisted";
+  reviewStatus: "approved" | "flagged" | "blocked";
   createdAt: string;
 }
 

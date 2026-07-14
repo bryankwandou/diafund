@@ -23,7 +23,10 @@ const toPad = (r: any): Pad => ({
   id: r.id, hubId: r.hub_id, title: r.title, summary: r.summary || "",
   category: r.category || "General", location: r.location || "", vault: r.vault,
   asset: r.asset as Asset, goal: num(r.goal), raised: num(r.raised),
-  beneficiary: r.beneficiary, status: r.status, createdAt: String(r.created_at),
+  beneficiary: r.beneficiary, status: r.status,
+  visibility: (r.visibility as Pad["visibility"]) || "public",
+  reviewStatus: (r.review_status as Pad["reviewStatus"]) || "approved",
+  createdAt: String(r.created_at),
 });
 const toMilestone = (r: any): Milestone => ({
   id: r.id, padId: r.pad_id, idx: num(r.idx), title: r.title, detail: r.detail || "",
@@ -51,6 +54,22 @@ export async function getHub(id: string): Promise<Hub | undefined> {
 }
 export async function listPads(): Promise<Pad[]> {
   const rows = await sql`select * from pads order by created_at`;
+  return rows.map(toPad);
+}
+
+// Explore feed: only public, approved pads. Ranked by verified delivery first
+// (milestones released), then funding momentum, then freshness — activity and
+// proven honesty float up, not paid placement.
+export async function explorePads(): Promise<Pad[]> {
+  const rows = await sql`
+    select p.*,
+      (select count(*)::int from milestones m where m.pad_id = p.id and m.status = 'released') as released_n,
+      (select count(*)::int from donations d where d.pad_id = p.id and d.created_at > now() - interval '7 days') as recent_n
+    from pads p
+    where p.visibility = 'public' and p.review_status = 'approved'
+    order by released_n desc, recent_n desc,
+      case when p.goal > 0 then p.raised / p.goal else 0 end desc,
+      p.created_at desc`;
   return rows.map(toPad);
 }
 export async function getPad(id: string): Promise<Pad | undefined> {
@@ -117,12 +136,20 @@ export async function createPad(input: {
   hubId: string; title: string; summary: string; category: string; location: string;
   asset: Asset; goal: number; beneficiary: string;
   milestones: Array<{ title: string; detail: string; amount: number; deadlineDays: number }>;
+  visibility?: "public" | "unlisted";
+  creatorId?: string; creatorIp?: string;
+  riskScore?: number; reviewStatus?: "approved" | "flagged";
 }): Promise<Pad> {
-  const id = slug(input.title);
+  let id = slug(input.title);
+  const clash = await sql`select 1 from pads where id = ${id} limit 1`;
+  if (clash[0]) id = `${id.slice(0, 33)}-${randomUUID().slice(0, 6)}`;
   const rows = await sql`
-    insert into pads (id, hub_id, title, summary, category, location, vault, asset, goal, beneficiary, status)
+    insert into pads (id, hub_id, title, summary, category, location, vault, asset, goal, beneficiary, status,
+                      visibility, creator_id, creator_ip, risk_score, review_status)
     values (${id}, ${input.hubId}, ${input.title}, ${input.summary}, ${input.category}, ${input.location},
-            ${padVaultPubkey(id)}, ${input.asset}, ${input.goal}, ${input.beneficiary}, 'open')
+            ${padVaultPubkey(id)}, ${input.asset}, ${input.goal}, ${input.beneficiary}, 'open',
+            ${input.visibility || "public"}, ${input.creatorId || null}, ${input.creatorIp || null},
+            ${input.riskScore || 0}, ${input.reviewStatus || "approved"})
     returning *`;
   let i = 0;
   for (const m of input.milestones) {
