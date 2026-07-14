@@ -121,10 +121,28 @@ scripts            devnet bootstrap, migration, end-to-end proof
 docs               the mega-prompt build plan
 ```
 
+## On-chain escrow program (Anchor, live on devnet)
+
+The PDA-escrow Anchor program is deployed and proven on devnet. Release rules —
+verifier-gated proofs, beneficiary lock, once-per-milestone payout — are enforced
+by the program itself, not a server.
+
+- **Program ID:** [`8vzicDwCKBL8BvJy9cuaMTMN5p9fwKYwmTKuCLSmmvKj`](https://solscan.io/account/8vzicDwCKBL8BvJy9cuaMTMN5p9fwKYwmTKuCLSmmvKj?cluster=devnet)
+- Source: [`anchor/programs/anchor/src/lib.rs`](anchor/programs/anchor/src/lib.rs) · proof script: [`anchor/proof-anchor.mjs`](anchor/proof-anchor.mjs)
+
+End-to-end proof (one real cycle, all on devnet):
+
+1. `init_pad` — [3arFa8vD…ayYVA](https://solscan.io/tx/3arFa8vD162KesDJxvetxW6zH5dmrddQMZ5JZ2p4J2VgN31GvWVNpLqUhFdDBMs6DBD57jZeVuj2CyWGP2TayYVA?cluster=devnet)
+2. `donate` 0.1 SOL into the pad PDA — [4NmTh9nE…ukKhBi](https://solscan.io/tx/4NmTh9nE2afQuNRauVthUJroBmCEn2j1woi8dFHcZJCdV92hFMYEDPdqdFPGPUgBSpyAVsF3TC4rFaA2zXukKhBi?cluster=devnet)
+3. `attest` — SHA-256 proof hash anchored by the verifier — [4CwmGXH9…pkyKhGN](https://solscan.io/tx/4CwmGXH99tKLnqN2jMCtEAxqxep4uRxsi7RzC3KwmZw1Cqyi6CgohfRAifDu7puoyPNQuhDt9Qzz83hEspkyKhGN?cluster=devnet)
+4. `release` 0.05 SOL to the beneficiary, allowed only because the attestation exists — [4sWouDpm…N4M2A8XF](https://solscan.io/tx/4sWouDpmdDxrooa69qf4E4p1oiPtfzgeW92Tbiw98Egv9dDTU9FrRsyPiWyGnGnDdy3PDkyGEMtPxu1PN4M2A8XF?cluster=devnet)
+
+Final pad state on-chain: raised 0.1 SOL, released 0.05 SOL.
+
 ## Roadmap beyond the MVP
 
-- Move vaults to a PDA-owned Anchor program so release rules are enforced on-chain
-  rather than by a server signer.
+- Migrate the web app's donate/release flows from the server-signer MVP onto the
+  deployed Anchor program (IDL is generated at `anchor/target/idl/diafund_escrow.json`).
 - Verifier staking and slashing, so attestations carry economic weight.
 - Fiat off-ramp receipts pulled in through a partner so the last mile is machine
   readable.

@@ -28,7 +28,7 @@ pub mod diafund_escrow {
         require!(amount > 0, EscrowError::ZeroAmount);
         transfer(
             CpiContext::new(
-                ctx.accounts.system_program.to_account_info(),
+                ctx.accounts.system_program.key(),
                 Transfer {
                     from: ctx.accounts.donor.to_account_info(),
                     to: ctx.accounts.pad.to_account_info(),
