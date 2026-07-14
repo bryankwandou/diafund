@@ -35,9 +35,9 @@ export default async function PadPage({ params }: { params: Promise<{ id: string
           <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">{pad.summary}</p>
 
           <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-faint">
-            <span className="flex items-center gap-1.5">
+            <Link href={`/hub/${pad.hub.id}`} className="flex items-center gap-1.5 transition-colors hover:text-fg">
               <Building2 size={14} /> {pad.hub.name}
-            </span>
+            </Link>
             <span className="flex items-center gap-1.5">
               <MapPin size={14} /> {pad.location}
             </span>

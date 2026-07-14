@@ -21,9 +21,9 @@ export default async function Explore() {
       <div className="mt-6 flex flex-wrap gap-2">
         <span className="chip px-3 py-1 text-xs text-brand">All</span>
         {hubs.map((h) => (
-          <span key={h.id} className="chip px-3 py-1 text-xs text-muted">
+          <a key={h.id} href={`/hub/${h.id}`} className="chip px-3 py-1 text-xs text-muted transition-colors hover:border-brand/50 hover:text-fg">
             {h.name}
-          </span>
+          </a>
         ))}
       </div>
 

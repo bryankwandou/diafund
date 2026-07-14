@@ -15,6 +15,7 @@ export async function Nav() {
         <nav className="hidden items-center gap-7 text-sm text-muted md:flex">
           <Link href="/explore" className="hover:text-fg transition-colors">Explore</Link>
           <Link href="/#how" className="hover:text-fg transition-colors">How it works</Link>
+          <Link href="/deck" className="hover:text-fg transition-colors">Deck</Link>
           {user?.role === "admin" && (
             <Link href="/console" className="hover:text-fg transition-colors">Console</Link>
           )}

@@ -47,3 +47,9 @@ yarn-error.log*
 next-env.d.ts
 
 .vercel
+
+# anchor workspace artifacts
+anchor/target/
+anchor/.anchor/
+anchor/node_modules/
+anchor/test-ledger/
